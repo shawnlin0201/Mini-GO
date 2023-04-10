@@ -4,6 +4,7 @@ import { createPinia } from 'pinia'
 
 import 'virtual:windi.css'
 import 'virtual:windi-devtools'
+import '@/styles/responsive.scss'
 
 // header 入口點
 const App = createApp(MainPage)

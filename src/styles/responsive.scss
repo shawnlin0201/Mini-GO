@@ -1,0 +1,13 @@
+@use "sass:math";
+
+$base-main-width: 640px;
+$device-list: 0px 100px 150px 200px 300px 360px 400px 440px 480px 520px 560px 600px 640px 768px 960px 1280px;
+@each $current-device in $device-list {
+  $i: index($device-list, $current-device);
+  @media (min-width: $current-device) {
+    body,
+    html {
+      font-size: math.div($current-device, $base-main-width) + rem;
+    }
+  }
+}
