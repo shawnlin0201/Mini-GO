@@ -1,4 +1,7 @@
 import { ref, reactive } from 'vue'
+import { cloneDeep } from 'lodash'
+import { isValidMove, countLiberties } from './chess-rule.js'
+
 const charToNumber = (str) => {
   const arrOffset = 1
   return str.replace(/[a-zA-Z]/g, (match) => {
@@ -23,6 +26,7 @@ export const minigo = (() => {
         FF: '',
       })
       this.historyMoves = reactive([])
+      this.historyBoard = []
       this.board = reactive(new Array(9).fill().map(() => new Array(9).fill(null)))
       this.sgf = ref(sgf)
       this.currPlayerColor = ref('')
@@ -33,7 +37,7 @@ export const minigo = (() => {
       return this.currPlayerColor.value
     }
     getPointColor({ x, y }) {
-      return this.board[x][y].color
+      return this.board[x][y]
     }
     isOccupied({ x, y }) {
       return this.board[x][y] !== null
@@ -65,32 +69,63 @@ export const minigo = (() => {
           y: charToNumber(match[2][1]),
         })
       }
-      moves.forEach((move) => this.putChess({ color: move.color, x: move.x, y: move.y, updateSGF: false }))
+      moves.forEach((move) => this.putChess({ color: move.color, x: move.x, y: move.y, updateSGFFromMove: false }))
       return sgf
     }
-    putChess({ color, x, y, updateSGF = true }) {
+    putChess({ color, x, y, updateSGFFromMove = true }) {
+      this.historyBoard.push(cloneDeep(this.board))
       // todo: 驗證合法
-      // todo: 吃子判斷
-      this.board[x][y] = {
-        color,
+      if (
+        !isValidMove({
+          historyBoard: this.historyBoard,
+          color,
+          x,
+          y,
+        })
+      ) {
+        return
       }
+      // todo: 吃子判斷
+      this.board[x][y] = color
 
       this.historyMoves.push({
         color,
         x,
         y,
       })
+      this.updateBoard({ currColor: color })
 
-      if (updateSGF) {
-        this.updateSGF({ color, x, y })
+      if (updateSGFFromMove) {
+        this.updateSGFFromMove({ color, x, y })
       }
     }
-    updateSGF({ color, x, y }) {
+    updateBoard({ currColor }) {
+      const opponentColor = currColor === 'B' ? 'W' : 'B'
+      const markedBoard = []
+      this.board.forEach((row, x) => {
+        row.forEach((color, y) => {
+          if (color === opponentColor) {
+            let visited = new Set()
+            const liberties = countLiberties({
+              visited,
+              currColor: opponentColor,
+              board: this.board,
+              x,
+              y,
+            })
+            if (liberties === 0) {
+              markedBoard.push([x, y])
+            }
+          }
+        })
+      })
+      markedBoard.forEach((point) => {
+        this.board[point[0]][point[1]] = null
+      })
+    }
+    updateSGFFromMove({ color, x, y }) {
       const newMove = `;${color}[${numberToChar(x)}${numberToChar(y)}]`
       this.sgf.value = this.sgf.value.replace(')', `${newMove})`)
-    }
-    undo() {
-      // todo: SGF 移除最後一動
     }
   }
   return {

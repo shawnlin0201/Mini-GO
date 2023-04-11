@@ -57,7 +57,10 @@
 import { ref } from 'vue'
 import { minigo } from '@/utils/chess'
 // const sgfInfo = ref(`(;FF[4]GM[1]SZ[9];B[cd];W[dd];B[de];W[ef];B[dc])`)
-const sgfInfo = ref(`(;GM[1]SZ[9];B[aa];W[bb];B[cd];W[dd];B[de];W[ef];B[dc];W[ff])`)
+// const sgfInfo = ref(`(;GM[1]SZ[9])`)
+const sgfInfo = ref(
+  `(;GM[1]SZ[9];B[ab];W[aa];B[ga];W[ha];B[hb];W[ia];B[ic];W[ed];B[dd];W[de];B[ce];W[ef];B[df];W[cc];B[cb];W[fe];B[bc];W[ii];B[bd];W[ah];B[ai];W[bi])`,
+)
 const board = new minigo.Board(sgfInfo.value)
 const XAxis = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
 </script>
