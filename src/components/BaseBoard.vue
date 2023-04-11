@@ -39,7 +39,7 @@
             ></BaseStone>
             <BaseStone
               v-else
-              @click="board.putChess({ color: board.getCurrPlayerColor(), x: col - 1, y: row - 1 })"
+              @click="handleOnPutStone({ color: board.getCurrPlayerColor(), x: col - 1, y: row - 1 })"
               :class="
                 board.getCurrPlayerColor() === 'B'
                   ? 'hover:border-2 hover:border-black'
@@ -54,13 +54,23 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed } from 'vue'
 import { minigo } from '@/utils/chess'
-// const sgfInfo = ref(`(;FF[4]GM[1]SZ[9];B[cd];W[dd];B[de];W[ef];B[dc])`)
 // const sgfInfo = ref(`(;GM[1]SZ[9])`)
-const sgfInfo = ref(
-  `(;GM[1]SZ[9];B[ab];W[aa];B[ga];W[ha];B[hb];W[ia];B[ic];W[ed];B[dd];W[de];B[ce];W[ef];B[df];W[cc];B[cb];W[fe];B[bc];W[ii];B[bd];W[ah];B[ai];W[bi])`,
-)
-const board = new minigo.Board(sgfInfo.value)
+// const sgfInfo = ref(
+//   `(;GM[1]SZ[9];B[ab];W[aa];B[ga];W[ha];B[hb];W[ia];B[ic];W[ed];B[dd];W[de];B[ce];W[ef];B[df];W[cc];B[cb];W[fe];B[bc];W[ii];B[bd];W[ah];B[ai];W[bi])`,
+// )
+const props = defineProps({
+  sgfInfo: {
+    type: String,
+    default: '',
+  },
+})
+const emits = defineEmits(['updateSGF'])
+const board = computed(() => new minigo.Board(props.sgfInfo))
 const XAxis = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
+const handleOnPutStone = (obj) => {
+  board.value.putChess(obj)
+  emits('updateSGF', board.value.getSGF())
+}
 </script>
