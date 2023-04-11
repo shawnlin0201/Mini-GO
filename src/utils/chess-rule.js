@@ -1,6 +1,17 @@
-import { cloneDeep } from 'lodash'
-// export const isKo = (historyBoard, x, y) => {}
-export const countLiberties = ({ visited, currColor, board, x, y, needCheckOpponentLiberties = false }) => {
+import { cloneDeep, isEqual } from 'lodash'
+
+export const isKo = (currboard, historyBoard) => {
+  return isEqual(currboard, historyBoard.at(-2))
+}
+export const countLiberties = ({
+  visited,
+  currColor,
+  board,
+  historyBoard,
+  x,
+  y,
+  needCheckOpponentLiberties = false,
+}) => {
   const currBoard = cloneDeep(board)
   let liberties = 0
   let checkQueue = [[x, y]]
@@ -35,13 +46,12 @@ export const countLiberties = ({ visited, currColor, board, x, y, needCheckOppon
         const opponentLiberties = countLiberties({
           visited,
           currColor: opponentColor,
+          historyBoard,
           board: currBoard,
           x: nx,
           y: ny,
         })
         if (opponentLiberties === 0) {
-          console.warn('吃子')
-          // todo: 會有打劫
           return true
         }
       }
@@ -63,6 +73,7 @@ export const isValidMove = ({ historyBoard, color, x, y }) => {
   }
   let visited = new Set()
   let liberties = countLiberties({
+    historyBoard,
     visited,
     currColor: color,
     board: historyBoard.at(-1),

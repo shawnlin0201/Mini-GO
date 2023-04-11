@@ -1,6 +1,6 @@
 import { ref, reactive } from 'vue'
 import { cloneDeep } from 'lodash'
-import { isValidMove, countLiberties } from './chess-rule.js'
+import { isKo, isValidMove, countLiberties } from './chess-rule.js'
 
 const charToNumber = (str) => {
   const arrOffset = 1
@@ -26,7 +26,7 @@ export const minigo = (() => {
         FF: '',
       })
       this.historyMoves = reactive([])
-      this.historyBoard = []
+      this.historyBoard = reactive([])
       this.board = reactive(new Array(9).fill().map(() => new Array(9).fill(null)))
       this.sgf = ref(sgf)
       this.currPlayerColor = ref('')
@@ -74,7 +74,6 @@ export const minigo = (() => {
     }
     putChess({ color, x, y, updateSGFFromMove = true }) {
       this.historyBoard.push(cloneDeep(this.board))
-      // todo: 驗證合法
       if (
         !isValidMove({
           historyBoard: this.historyBoard,
@@ -85,28 +84,31 @@ export const minigo = (() => {
       ) {
         return
       }
-      // todo: 吃子判斷
       this.board[x][y] = color
-
+      this.clearChessWithoutLiberity({ currColor: color })
+      if (isKo(this.board, this.historyBoard)) {
+        this.board = this.historyBoard.at(-1)
+        this.historyBoard = this.historyBoard.slice(0, -1)
+        return
+      }
       this.historyMoves.push({
         color,
         x,
         y,
       })
-      this.updateBoard({ currColor: color })
-
       if (updateSGFFromMove) {
         this.updateSGFFromMove({ color, x, y })
       }
     }
-    updateBoard({ currColor }) {
+    clearChessWithoutLiberity({ currColor }) {
       const opponentColor = currColor === 'B' ? 'W' : 'B'
-      const markedBoard = []
+      const markedChess = []
       this.board.forEach((row, x) => {
         row.forEach((color, y) => {
           if (color === opponentColor) {
             let visited = new Set()
             const liberties = countLiberties({
+              historyBoard: this.historyBoard,
               visited,
               currColor: opponentColor,
               board: this.board,
@@ -114,12 +116,12 @@ export const minigo = (() => {
               y,
             })
             if (liberties === 0) {
-              markedBoard.push([x, y])
+              markedChess.push([x, y])
             }
           }
         })
       })
-      markedBoard.forEach((point) => {
+      markedChess.forEach((point) => {
         this.board[point[0]][point[1]] = null
       })
     }
